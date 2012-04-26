@@ -1,0 +1,114 @@
+import logging
+import json
+from sockjs.tornado import SockJSRouter, SockJSConnection
+
+class BacksyncModelRouter(SockJSConnection):
+    listeners = set()
+    MODELS = {}
+
+    @classmethod
+    def register(cls, name, handler):
+        cls.MODELS[name] = handler
+
+    def instance(self, name):
+        return self.MODELS.get(name, None)
+
+    def on_open(self, request):
+        self.listeners.add(self)
+
+        for cls in self.MODELS.values():
+            obj = cls(self.session)
+            if hasattr(obj, 'on_open'):
+                obj.on_open()
+
+    def on_close(self):
+        for cls in self.MODELS.values():
+            obj = cls(self.session)
+            if hasattr(obj, 'on_close'):
+                obj.on_close()
+
+        self.listeners.remove(self)
+
+    def on_message(self, message):
+        """
+        """
+        try:
+            msg = json.loads(message)
+        except :
+            pass
+
+        model, method = msg['event'].split(':', 1)
+
+        cls = self.instance(model)
+        obj = cls(self.session)
+
+        data  = msg.get('data', None)
+        txid  = msg.get('id', None)
+
+        logging.debug("[%s] EVENT = %s:%s  DATA = %r" % (txid, model, method, data))
+
+        func = getattr(obj, method)
+        result = None
+
+        if func:
+            if data is None:
+                result = func()
+            else:
+                result = func(**data)
+        else:
+            logging.info("Missing method on %s for %s" % (model, method))
+
+        if txid:
+            response = {
+                'id'    : txid,
+                'event' : '%s:%s' %  (model, method),
+                'data'  : (None, result),
+            }
+            print response
+            self.send(response)
+
+class BacksyncHandler(object):
+    model = None
+
+    def __init__(self, session):
+        self.session = session
+
+    def read(self, *args, **kwargs):
+        return [msg.serialize() for msg in self.model.find()]
+
+    def upsert(self, *args, **kwargs):
+        obj = self.model.find(**kwargs)
+        if obj is None:
+            obj = self.model(*args, **kwargs)
+        else:
+            obj.set(**kwargs)
+        obj.save()
+
+        s = obj.serialize()
+        self.notify("%s:upsert" % self._sync_name, s)
+        return s
+
+    def delete(self, *args, **kwargs):
+        obj = self.model.find(**kwargs)
+        obj.destroy(**kwargs)
+        self.notify("%s:delete" % self._sync_name, s)
+        return {}
+
+    def notify(self, method, data):
+        message = {'event': "%s:%s" % (self._sync_name, method), 'data' : data}
+        self.session.broadcast(BacksyncModelRouter.listeners, message)
+
+class backsync(object):
+    """Decorator"""
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def __call__(self, klass):
+        name = self.name or klass.__name__
+        self.klass = klass
+        BacksyncModelRouter.register(name, klass)
+        klass._sync_name = name
+        return klass
+
+BacksyncRouter = SockJSRouter(BacksyncModelRouter, '/backsync')
