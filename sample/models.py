@@ -76,14 +76,14 @@ class BackboneModel(object):
 #
 #
 class ChatUser(BackboneModel):
-    guid     = Field(default=lambda:str(uuid.uuid4()))
+    id         = Field(default=lambda:str(uuid.uuid4()))
     screenName = Field(default='Anonymous')
 
 class ChatMessage(BackboneModel):
     MESSAGES = []
     COUNTER  = 1000
 
-    guid       = Field(default=lambda:str(uuid.uuid4()))
+    id         = Field(default=lambda:str(uuid.uuid4()))
     userId     = Field()
     message    = Field(default='')
     color      = Field(default='black')
@@ -99,10 +99,10 @@ class ChatMessage(BackboneModel):
 
     @classmethod
     def find(cls, **kwargs):
-        guid = kwargs.get('guid')
-        if guid:
+        id = kwargs.get('id')
+        if id:
             for m in cls.MESSAGES:
-                if m.guid == guid:
+                if m.id == id:
                     return m
             return None
         return cls.MESSAGES
@@ -120,9 +120,9 @@ class UserHandler(backsync.BacksyncHandler):
     USERS = {}
 
     def _find(self, **kwargs):
-        guid = kwargs['guid']
+        id = kwargs['id']
         for obj in self.USERS.values():
-            if guid == obj.guid:
+            if id == obj.id:
                 return obj
         return None
 
@@ -173,10 +173,10 @@ class MessageHandler(backsync.BacksyncHandler):
 
     def upsert(self, *args, **kwargs):
         v = super(MessageHandler, self).upsert(*args, **kwargs)
-        self.notify("ChatMessage:upsert", v)
+        self.notify("upsert", v)
         return v
 
     def delete(self, *args, **kwargs):
         v = super(MessageHandler, self).delete(*args, **kwargs)
-        self.notify("ChatMessage:upsert", v)
+        self.notify("delete", v)
         return v

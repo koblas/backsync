@@ -1,11 +1,10 @@
 var User = Backbone.Model.extend({
      urlRoot : 'User',
-     idAttribute: "guid",
 
      defaults: function() {
         return {
             screenName: 'You',
-            guid: Math.uuid(),
+            id: Math.uuid(),
             isMe: false
         };
      },
@@ -13,7 +12,7 @@ var User = Backbone.Model.extend({
      toJSON: function() {
          return {
             cid: this.cid,
-            guid: this.get('guid'),
+            id: this.id,
             screenName: this.get('screenName'),
             isMe: this.get('isMe')
         };
@@ -44,7 +43,7 @@ var Users = Backbone.Collection.extend({
 
     serverUpsert: function(data) {
         // console.log("Server Upsert");
-        var m = this.get(data.guid);
+        var m = this.get(data.id);
         if (m) {
             m.set(data);
         } else {
@@ -54,7 +53,7 @@ var Users = Backbone.Collection.extend({
 
     serverDelete: function(data) {
         // console.log("Server Delete");
-        var m = this.get(data.guid);
+        var m = this.get(data.id);
         if (m) 
             this.remove(m);
     },
@@ -203,7 +202,7 @@ UserModule.prototype =  {
         });
 
         app.events.on('users-disconnected', function(userInfo) {
-            var model = this.users.get(userInfo.guid);
+            var model = this.users.get(userInfo.id);
             self.users.remove(model);
         });
     },

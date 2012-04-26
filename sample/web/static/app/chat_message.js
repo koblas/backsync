@@ -1,12 +1,11 @@
 var Message = Backbone.Model.extend({
      urlRoot : 'ChatMessage',
-     idAttribute: "guid",
 
      defaults: function() {
         return {
+            id: Math.uuid(),
             color: 'black',
             username: 'anonymous',
-            guid: Math.uuid(),
             isFromMe: false
         };
      }
@@ -23,7 +22,7 @@ var Messages = Backbone.Collection.extend({
 
     serverUpsert: function(data) {
         console.log("Server Upsert");
-        var m = this.get(data.guid);
+        var m = this.get(data.id);
         if (m) {
             m.set(data);
         } else {
@@ -33,7 +32,7 @@ var Messages = Backbone.Collection.extend({
 
     serverDelete: function(data) {
         console.log("Server Delete");
-        var m = this.get(data.guid);
+        var m = this.get(data.id);
         if (m) 
             this.remove(m);
     }
