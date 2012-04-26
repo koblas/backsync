@@ -22,7 +22,26 @@ How It Works
 TODO -
     Sample Client changes
     Sample Server
-    Protocol
+
+Protocol
+--------
+
+All messages are in JSON - It's 2012 after all.
+
+Message :
+    {
+        id    : TRANSACTION_ID      // Server only sends ID in response to a Client ID
+        event : MODEL ':' METHOD
+        data  : MODEL_DATA
+    }
+
+    MODEL := 
+        STRING identifier for the Client/Server Model Object
+    
+    METHOD :=
+        read    - Triggered back a Backbone.collection.fetch() - Reads all objects
+        upsert  - Update or Insert a record into the store
+        delete  - Delete a record
 
 Inspiration
 -----------
