@@ -46,10 +46,6 @@ var MessageView = Backbone.View.extend({
 
         this.model.view = this;
 
-        app.events.on('user', function(user) { 
-            console.log("USER", user);
-            self.user = user; 
-        });
         _.bindAll(this, 'render');
     },
 

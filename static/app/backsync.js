@@ -26,7 +26,7 @@ _.extend(Backsync.prototype, Backbone.Events, {
     },
 
     addTx: function(id, success, error) {
-        this.pending[id] = [error, success];
+        this.pending[id] = { error: error, success: success };
     },
 
     msgTx: function(id, msg) {
@@ -43,6 +43,11 @@ _.extend(Backsync.prototype, Backbone.Events, {
     onclose: function() {
         console.log('SockJS close');
         // setTimeout(this.sync.connect, 1000);
+        _.each(this.pending, function (item) {
+            if (!! item.error) 
+                item.error('CLOSED');
+        });
+        this.pending = {};
     },
 
     onmessage: function(e) {
@@ -53,13 +58,14 @@ _.extend(Backsync.prototype, Backbone.Events, {
         var cb = self.pending[data.id];
         if (cb) {
             delete self.pending[data.id];
-            // console.log(data.data);
-            if (data.data[0] && !!cb[0]) {
-                cb[0](data.data[0]);
-            } else if (!!cb[1]) {
-                cb[1](data.data[1]);
+            if (!! data.error) {
+                if (!! cb.error)
+                    cb.error(data.error);
+            } else if (!! cb.success) {
+                cb.success(data.data);
             }
         } else {
+            console.log("Event: ", data.event, data.data);
             backsync.trigger(data.event, data.data);
         }
     }

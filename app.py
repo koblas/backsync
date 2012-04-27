@@ -18,9 +18,9 @@ define("prefork", default=False, help="pre-fork across all CPUs", type=bool)
 define("port", default=9000, help="run on the given port", type=int)
 define("bootstrap", default=False, help="Run the bootstrap model commands")
 
-from sample.web import MainHandler, ChatHandler
+from sample.main import MainHandler
+from sample.chat import ChatHandler
 from backsync import BacksyncRouter
-from sample import models
 
 #
 #
@@ -36,8 +36,8 @@ class Application(tornado.web.Application):
 
         app_settings = dict(
             debug=options.debug,
-            template_path=os.path.join(os.path.dirname(__file__), "sample", "web", "templates"),
-            static_path=os.path.join(os.path.dirname(__file__), "sample", "web", "static"),
+            template_path=os.path.join(os.path.dirname(__file__), "templates"),
+            static_path=os.path.join(os.path.dirname(__file__), "static"),
         )
 
         super(Application, self).__init__(handlers, **app_settings)

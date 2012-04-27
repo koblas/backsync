@@ -30,4 +30,5 @@ class BacksyncHandler(object):
 
     def notify(self, method, data):
         message = {'event': "%s:%s" % (self._sync_name, method), 'data' : data}
+        logging.debug("Sending Notification %s" % message['event'])
         self.session.broadcast(BacksyncModelRouter.listeners, message)
