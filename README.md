@@ -19,9 +19,43 @@ transport, thus ended up having to drop Backbone.IO and build out something slig
 How It Works
 ------------
 
-TODO -
-    Sample Client changes
-    Sample Server
+Upsert / Delete is the way everything communicates.
+
+Client Changes
+--------------
+
+The premise is that instead of attaching everything on the save handler on the model object, it's handled 
+at the Backbone.Collection level so you'll end up with code like this:
+
+    var Message = Backbone.Model.extend({
+         urlRoot : 'ChatMessage',
+    });
+
+    var Messages = Backbone.Collection.extend({
+        url    : 'ChatMessage',
+        model  : Message,
+
+        initialize: function (model) {
+            this.syncBind('upsert', this.serverUpsert, this);
+            this.syncBind('delete', this.serverDelete, this);
+        },
+
+        serverUpsert: function(data) {
+            var m = this.get(data.id);
+            if (m) {
+                m.set(data);
+            } else {
+                this.add(data);
+            }
+        },
+
+        serverDelete: function(data) {
+            var m = this.get(data.id);
+            if (m)
+                this.remove(m);
+        }
+    });
+
 
 Protocol
 --------
