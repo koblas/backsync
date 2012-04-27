@@ -28,12 +28,10 @@ Protocol
 
 All messages are in JSON - It's 2012 after all.
 
-Message :
-    {
+    Message :=
         id    : TRANSACTION_ID      // Server only sends ID in response to a Client ID
         event : MODEL ':' METHOD
         data  : MODEL_DATA
-    }
 
     MODEL := 
         STRING identifier for the Client/Server Model Object
@@ -49,4 +47,3 @@ Inspiration
 * Meteor - https://github.com/meteor/meteor
 * Chatty - https://github.com/liamks/Chatty
 * Backbone.IO - http://alogicalparadox.com/backbone.iobind/
-

@@ -1,9 +1,13 @@
-import logging
 from collections import defaultdict, OrderedDict
 
-# from blinker import Signal
-
+# Import to attach signals to
 import backsync
+
+"""
+Enable mock models, these allow you to mimic Mongoengine or Django model objects which makes the 
+application code look more realistic.  Though fundamentally, it's all stored in a dictionary.
+
+"""
 
 STORE = defaultdict(OrderedDict)
 
@@ -12,6 +16,8 @@ STORE = defaultdict(OrderedDict)
 #
 #
 class Field(object):
+    """Trivial definition of a field with defaulting"""
+
     value   = None
     default = None
 
@@ -98,11 +104,15 @@ class BackModel(object):
         return self
 
     def save(self, *args, **kwargs):
+        """Save handler, the key is the signaling on post_save"""
+
         self.objects._upsert(self.id, self)
 
         backsync.signals.post_save.send(self.__class__, instance=self)
 
     def delete(self, *args, **kwargs):
+        """Delete handler, the key is the signaling on post_save"""
+
         self.objects._delete(self.id)
 
         backsync.signals.post_delete.send(self.__class__, instance=self)
@@ -111,6 +121,8 @@ class BackModel(object):
         return None
 
     def serialize(self):
+        """For all the fields that are defined on the object, serialize them out"""
+
         data = {}
         for field in self._fields:
             data[field] = getattr(self, field)

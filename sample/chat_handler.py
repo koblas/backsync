@@ -1,49 +1,22 @@
 import logging
-import uuid
-
 import backsync
-from .mock_model import BackModel, Field
-
-class ChatUser(BackModel):
-    meta = {
-        'sync_name' : 'User',
-    }
-
-    id         = Field(default=lambda:str(uuid.uuid4()))
-    screenName = Field(default='Anonymous')
-
-class ChatMessage(BackModel):
-    id         = Field(default=lambda:str(uuid.uuid4()))
-    userId     = Field()
-    message    = Field(default='')
-    color      = Field(default='black')
-    screenName = Field(default='anonymous')
-
-    #def save(self, *args, **kwargs):
-    #    self.objects.upsert(self.id, self)
-    #    super(ChatMessage, self).save(*args, **kwargs)
-
-    #def delete(self, *args, **kwargs):
-    #    self.objects.delete(self.id, self)
-    #    super(ChatMessage, self).destroy(*args, **kwargs)
-
-ChatMessage(message="message one").save()
-ChatMessage(message="message two").save()
-ChatMessage(message="message three").save()
+from sample.chat_models import ChatMessage, ChatUser
 
 #
 #
 #
 @backsync.router('User')
 class UserHandler(backsync.BacksyncHandler):
+    """Manage users - remove them from the active list of users when the session closes"""
+
     SESSIONS = {}
 
     def read(self, *args, **kwargs):
-        print "UserHandler - READ..."
+        # print "UserHandler - READ..."
         return [obj.serialize() for obj in ChatUser.objects.all()]
 
     def upsert(self, *args, **kwargs):
-        print "UserHandler - UPSERT..."
+        # print "UserHandler - UPSERT..."
         obj = ChatUser.objects.get(kwargs['id'])
 
         if obj is None:
@@ -58,7 +31,7 @@ class UserHandler(backsync.BacksyncHandler):
         return obj.serialize()
 
     def delete(self, *args, **kwargs):
-        print "DELETE..."
+        # print "DELETE..."
 
         obj = ChatUser.objects.get(kwargs['id'])
         if obj:
@@ -73,16 +46,18 @@ class UserHandler(backsync.BacksyncHandler):
         return {}
 
     def on_open(self):
-        print "Connection OPENED"
+        logging.debug("Connection OPENED")
 
     def on_close(self):
-        print "Connection CLOSED"
+        logging.debug("Connection CLOSED")
         if self.session in self.SESSIONS:
             obj = self.SESSIONS.pop(self.session)
             obj.delete()
 
 @backsync.router('ChatMessage')
 class MessageHandler(backsync.BacksyncHandler):
+    """Pretty simple collection reader"""
+
     def read(self, *args, **kwargs):
         return [obj.serialize() for obj in ChatMessage.objects.all()]
 
