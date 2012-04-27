@@ -43,6 +43,7 @@ var Users = Backbone.Collection.extend({
 
     serverUpsert: function(data) {
         // console.log("Server Upsert");
+
         var m = this.get(data.id);
         if (m) {
             m.set(data);
@@ -53,10 +54,12 @@ var Users = Backbone.Collection.extend({
 
     serverDelete: function(data) {
         // console.log("Server Delete");
+
         var m = this.get(data.id);
+
         if (m) 
             this.remove(m);
-    },
+    }
 });
 
 var UserView = Backbone.View.extend({
@@ -103,6 +106,7 @@ var UsersView = Backbone.View.extend({
     },
 
     on_change: function() {
+        console.log("UsersView - ON CHANGE");
         this.render();
     },
 
@@ -125,6 +129,7 @@ var UsersView = Backbone.View.extend({
     },
 
     removeUser: function(user) {
+        console.log("Remove User", user);
         user.view.remove();
         this.$numUsers.text(this.collection.length);
     }

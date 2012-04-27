@@ -1,6 +1,6 @@
 from .router import BacksyncModelRouter
 
-class backsync(object):
+class router(object):
     """Decorator"""
 
     def __init__(self, name=None):
